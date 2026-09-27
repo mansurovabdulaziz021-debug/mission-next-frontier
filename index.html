@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MISSION // NEXT FRONTIER — NASA Space Apps</title>
+    <meta name="description" content="Autonomous Earth Monitoring & Solar System Exploration Platform - NASA Space Apps Challenge 2026" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <!-- 3D Canvas -->
+      <canvas id="scene-canvas"></canvas>
+
+      <!-- Boot Loader (Protected Entry Module) -->
+      <div id="loader" class="loader" role="status" aria-live="polite">
+        <div class="loader__content">
+          <div class="loader__hud-frame">
+            <div class="loader__corner loader__corner--tl"></div>
+            <div class="loader__corner loader__corner--tr"></div>
+            <div class="loader__corner loader__corner--bl"></div>
+            <div class="loader__corner loader__corner--br"></div>
+          </div>
+          <div class="loader__text">MISSION // NEXT FRONTIER</div>
+          <div class="loader__bar-container">
+            <div id="loader-bar" class="loader__bar"></div>
+          </div>
+          <div id="loader-status" class="loader__status">Initializing renderer…</div>
+        </div>
+      </div>
+
+      <!-- Landing HUD Overlay (Protected Entry Module) -->
+      <div class="hud" aria-hidden="true">
+        <div class="hud__corner hud__corner--tl">+</div>
+        <div class="hud__corner hud__corner--tr">+</div>
+        <div class="hud__corner hud__corner--bl">+</div>
+        <div class="hud__corner hud__corner--br">+</div>
+
+        <div class="hud__readout hud__readout--top-left">
+          <span class="hud__label">SYS:</span>
+          <span id="hud-sys" class="hud__value">ONLINE // NOMINAL</span>
+        </div>
+        <div class="hud__readout hud__readout--top-right">
+          <span class="hud__label">UTC:</span>
+          <span id="hud-utc" class="hud__value">00:00:00</span>
+        </div>
+        <div class="hud__readout hud__readout--bottom-left">
+          <span class="hud__label">TARGET:</span>
+          <span id="hud-lat" class="hud__value">0.000°</span>
+        </div>
+        <div class="hud__readout hud__readout--bottom-right">
+          <span class="hud__label">ORBIT:</span>
+          <span id="hud-dist" class="hud__value">GEO 35,786 KM</span>
+        </div>
+      </div>
+
+      <!-- Landing View (Protected Entry Module) -->
+      <section id="landing" class="landing" aria-hidden="true">
+        <div class="landing__scanline"></div>
+        <div class="landing__content">
+          <div class="landing__eyebrow">NASA SPACE APPS CHALLENGE // 2026</div>
+          <h1 class="landing__title">
+            <span class="landing__title-line">MISSION</span>
+            <span class="landing__title-line landing__title-line--accent">NEXT FRONTIER</span>
+          </h1>
+          <p class="landing__subtitle">AUTONOMOUS EARTH MONITORING &amp; EXPLORATION PLATFORM</p>
+          <button id="enter-btn" class="landing__cta" type="button" aria-label="Enter Mission Control">
+            <span class="landing__cta-border"></span>
+            <span class="landing__cta-text">ENTER MISSION CONTROL</span>
+            <span class="landing__cta-icon" aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- PHASE 1 & 2: MISSION CONTROL & SOLAR SYSTEM EXPLORATION -->
+      <section id="mission-control" class="mission-control" aria-hidden="true">
+        <!-- 3D Spatial Tracking Reticle -->
+        <div id="mc-spatial-reticle" class="mc__spatial-reticle" aria-hidden="true">
+          <div class="mc__reticle-bracket mc__reticle-bracket--tl"></div>
+          <div class="mc__reticle-bracket mc__reticle-bracket--tr"></div>
+          <div class="mc__reticle-bracket mc__reticle-bracket--bl"></div>
+          <div class="mc__reticle-bracket mc__reticle-bracket--br"></div>
+          <div class="mc__reticle-label">
+            <span id="mc-reticle-tag" class="mc__reticle-tag">EARTH</span>
+            <span id="mc-reticle-coords" class="mc__reticle-coords">-- PX</span>
+          </div>
+        </div>
+
+        <!-- 3D Hover Tooltip -->
+        <div id="mc-hover-tooltip" class="mc__hover-tooltip" aria-hidden="true">
+          <div class="mc__hover-header">
+            <span class="mc__hover-icon">◎</span>
+            <span id="mc-hover-tag" class="mc__hover-tag">TARGET</span>
+          </div>
+          <div id="mc-hover-dist" class="mc__hover-dist">-- KM</div>
+          <div class="mc__hover-action">CLICK TO ENGAGE CAMERA TRAVEL</div>
+        </div>
+
+        <!-- 1. Minimal Top-Level Navigation & Status Bar -->
+        <header class="mc__top-bar">
+          <div class="mc__top-left">
+            <button id="mc-back-btn" class="mc__back-btn" type="button" aria-label="Exit to landing apex">
+              <span class="mc__back-icon" aria-hidden="true">←</span>
+              <span>APEX</span>
+            </button>
+            <div class="mc__brand-badge">
+              <span class="mc__brand-title">MISSION // NEXT FRONTIER</span>
+              <span class="mc__brand-phase">RELEASE CANDIDATE // SUBMISSION FREEZE</span>
+            </div>
+          </div>
+
+          <!-- Destination Navigation Selector -->
+          <nav class="mc__dest-nav" aria-label="Destination navigation">
+            <button class="mc__dest-tab" data-dest="SOLAR_SYSTEM" type="button" aria-selected="false">
+              <span class="mc__dest-idx">00</span>
+              <span class="mc__dest-name">SOLAR SYSTEM</span>
+              <span class="mc__dest-dot" aria-hidden="true"></span>
+            </button>
+            <button class="mc__dest-tab mc__dest-tab--active" data-dest="EARTH" type="button" aria-selected="true">
+              <span class="mc__dest-idx">01</span>
+              <span class="mc__dest-name">EARTH</span>
+              <span class="mc__dest-dot" aria-hidden="true"></span>
+            </button>
+            <button class="mc__dest-tab" data-dest="MOON" type="button" aria-selected="false">
+              <span class="mc__dest-idx">02</span>
+              <span class="mc__dest-name">MOON</span>
+              <span class="mc__dest-dot" aria-hidden="true"></span>
+            </button>
+            <button class="mc__dest-tab" data-dest="MARS" type="button" aria-selected="false">
+              <span class="mc__dest-idx">03</span>
+              <span class="mc__dest-name">MARS</span>
+              <span class="mc__dest-dot" aria-hidden="true"></span>
+            </button>
+          </nav>
+
+          <!-- Top-Right NASA Data Intelligence & Mission Status -->
+          <div class="mc__top-right">
+            <div class="mc__science-actions">
+              <button id="mc-presentation-toggle" class="mc__pres-toggle" type="button" aria-expanded="false" title="Launch Presentation Showcase Mode">
+                <span class="mc__pres-icon">▶</span>
+                <span class="mc__pres-toggle-text">SHOWCASE</span>
+                <span class="mc__pres-badge">DEMO</span>
+              </button>
+              <div id="mc-audio-control" class="mc__audio-ctrl">
+                <button id="mc-audio-btn" class="mc__audio-btn" type="button" aria-label="Toggle Audio" title="Toggle Sound (M)">
+                  <span id="mc-audio-icon" class="mc__audio-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                  </span>
+                  <span id="mc-audio-val" class="mc__audio-val">70%</span>
+                </button>
+                <div id="mc-audio-slider-wrap" class="mc__audio-slider-wrap">
+                  <input id="mc-audio-slider" class="mc__audio-slider" type="range" min="0" max="1" step="0.05" value="0.7" aria-label="Volume">
+                </div>
+              </div>
+              <!-- PHASE 11 — Live Cosmos controls (highest priority) -->
+              <button id="mc-space-now-toggle" class="mc__space-now-toggle" type="button" aria-expanded="false" title="SPACE NOW — Live window into our cosmic environment">
+                <span class="mc__space-now-pulse" aria-hidden="true"></span>
+                <span class="mc__space-now-text">SPACE NOW</span>
+                <span class="mc__space-now-badge">LIVE</span>
+              </button>
+              <button id="mc-time-machine-toggle" class="mc__time-machine-toggle" type="button" aria-expanded="false" title="Cosmic Time Machine — Navigate through time 1800–2050 CE">
+                <span class="mc__time-machine-icon">⏳</span>
+                <span class="mc__time-machine-text">TIME MACHINE</span>
+                <span class="mc__time-machine-badge">1800–2050</span>
+              </button>
+              <button id="mc-architect-toggle" class="mc__architect-toggle" type="button" aria-expanded="false" title="Launch Mission Architect: The Cosmic Mission Composer">
+                <span class="mc__architect-icon">⚙</span>
+                <span class="mc__architect-toggle-text">MISSION ARCHITECT</span>
+                <span class="mc__architect-badge">PHASE 9</span>
+              </button>
+              <button id="mc-phenomena-toggle" class="mc__phenomena-toggle" type="button" aria-expanded="false" title="Launch Phenomena Cinematic Visual System">
+                <span class="mc__phenomena-icon">✧</span>
+                <span class="mc__phenomena-toggle-text">PHENOMENA LAB</span>
+                <span class="mc__phenomena-badge">PHASE 8</span>
+              </button>
+              <button id="mc-observatory-toggle" class="mc__observatory-toggle" type="button" aria-expanded="false" title="Launch Cosmic Observatory & Scientific Evidence Lab">
+                <span class="mc__obs-icon">⌖</span>
+                <span class="mc__obs-toggle-text">OBSERVATORY // EVIDENCE LAB</span>
+                <span class="mc__obs-badge">NEW</span>
+              </button>
+              <button id="mc-discovery-toggle" class="mc__discovery-toggle" type="button" aria-expanded="false" title="Explore Cosmic Discoveries">
+                <span class="mc__discovery-icon">✦</span>
+                <span class="mc__discovery-toggle-text">DISCOVERIES</span>
+                <span id="mc-discovery-count-badge" class="mc__discovery-count-badge">0 / 18</span>
+              </button>
+              <button id="mc-scenario-toggle" class="mc__scenario-toggle" type="button" aria-expanded="false" title="Open Interactive What Happens If? Scenario Engine">
+                <span class="mc__scenario-icon">⚡</span>
+                <span class="mc__scenario-toggle-text">WHAT HAPPENS IF?</span>
+              </button>
+              <button id="mc-science-toggle" class="mc__science-toggle" type="button" aria-expanded="false" title="Toggle NASA Scientific Data Matrix">
+                <span class="mc__science-icon">◈</span>
+                <span class="mc__science-toggle-text">DATA INTELLIGENCE</span>
+              </button>
+              <button id="mc-sources-btn" class="mc__sources-btn" type="button" title="View NASA / JPL Scientific Source Transparency Catalog">
+                <span>SOURCES ↗</span>
+              </button>
+            </div>
+            <div class="mc__status-indicator">
+              <span class="mc__pulse-beacon" aria-hidden="true"></span>
+              <span class="mc__status-text">CARRIER LOCKED</span>
+            </div>
+            <div class="mc__clock-box">
+              <span class="mc__clock-label">MISSION TIME</span>
+              <span id="mc-met" class="mc__clock-val">T+ 001:00:45</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- 2. Left Floating Spatial Vector & Physical Parameters HUD -->
+        <aside class="mc__hud-left" aria-label="Target telemetry and physical parameters">
+          <div class="mc__hud-card">
+            <div class="mc__card-header">
+              <span class="mc__card-tag">FOCAL TARGET</span>
+              <span id="mc-target-latency" class="mc__card-badge">&lt; 0.12 SEC</span>
+            </div>
+            <h2 id="mc-target-name" class="mc__target-title">EARTH // TERRA-1</h2>
+            <div id="mc-target-cat" class="mc__target-desc">TERRESTRIAL PLANET</div>
+
+            <div class="mc__vector-grid">
+              <div class="mc__vector-item">
+                <span class="mc__vector-label">SOLAR DISTANCE</span>
+                <span id="mc-target-dist" class="mc__vector-val">1.000 AU</span>
+              </div>
+              <div class="mc__vector-item">
+                <span class="mc__vector-label">ORBITAL VELOCITY</span>
+                <span id="mc-target-vel" class="mc__vector-val">29.78 KM/S</span>
+              </div>
+              <div class="mc__vector-item">
+                <span class="mc__vector-label">EQUATORIAL RADIUS</span>
+                <span id="mc-target-radius" class="mc__vector-val">6,371 KM</span>
+              </div>
+              <div class="mc__vector-item">
+                <span class="mc__vector-label">SURFACE GRAVITY</span>
+                <span id="mc-target-gravity" class="mc__vector-val">9.807 M/S²</span>
+              </div>
+              <div class="mc__vector-item">
+                <span class="mc__vector-label">ROTATION PERIOD</span>
+                <span id="mc-target-period" class="mc__vector-val">23h 56m</span>
+              </div>
+              <div class="mc__vector-item">
+                <span class="mc__vector-label">ATMOSPHERE</span>
+                <span id="mc-target-atmo" class="mc__vector-val">78% N2, 21% O2</span>
+              </div>
+            </div>
+
+            <!-- Visualization Scale Notice -->
+            <div class="mc__scale-notice">
+              <span class="mc__scale-icon">ℹ</span>
+              <span>CALIBRATED VISUALIZATION SCALE</span>
+            </div>
+            <button class="mc__how-do-we-know-btn" data-how-do-we-know="CASE_05_NAVIGATION" type="button" title="Inspect scientific evidence for interplanetary navigation">
+              <span class="mc__hd-icon">⌖</span>
+              <span>HOW DO WE KNOW? ↗</span>
+            </button>
+          </div>
+
+          <!-- Subsystem Health Area -->
+          <div class="mc__hud-card">
+            <div class="mc__card-header">
+              <span class="mc__card-tag">SUBSYSTEM TELEMETRY</span>
+              <span class="mc__card-badge mc__card-badge--ok">ALL NOMINAL</span>
+            </div>
+            <div id="mc-subsystems-list" class="mc__telemetry-table">
+              <!-- Dynamically populated from MissionState -->
+            </div>
+          </div>
+        </aside>
+
+        <!-- 3. Right Contextual Information & Observation Panel -->
+        <aside class="mc__hud-right" aria-label="Contextual observation telemetry">
+          <div class="mc__hud-card">
+            <div class="mc__card-header">
+              <span class="mc__card-tag">SENSOR OBSERVATION MATRIX</span>
+              <span class="mc__card-badge">LIVE SENSORS</span>
+            </div>
+            <div id="mc-obs-list" class="mc__obs-grid">
+              <!-- Dynamically populated from MissionState -->
+            </div>
+          </div>
+
+          <!-- Spatial View & Viewport Layer Toggles -->
+          <div class="mc__hud-card">
+            <div class="mc__card-header">
+              <span class="mc__card-tag">VIEWPORT LAYERS</span>
+            </div>
+            <div class="mc__toggle-group">
+              <button class="mc__toggle-btn mc__toggle-btn--active" data-toggle="trajectories" type="button">
+                <span class="mc__toggle-icon">◈</span>
+                <span>ORBITAL TRAJECTORIES</span>
+              </button>
+              <button class="mc__toggle-btn mc__toggle-btn--active" data-toggle="sensors" type="button">
+                <span class="mc__toggle-icon">▲</span>
+                <span>PLANETARY SENSORS</span>
+              </button>
+              <button class="mc__toggle-btn mc__toggle-btn--active" data-toggle="grid" type="button">
+                <span class="mc__toggle-icon">▦</span>
+                <span>HELIOCENTRIC GRID</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 4. Bottom Interactive Timeline / Navigation System -->
+        <footer class="mc__timeline-bar" aria-label="Mission epoch timeline">
+          <div class="mc__timeline-header">
+            <span class="mc__timeline-title">EXPEDITION TRAJECTORY MILESTONES</span>
+            <span class="mc__timeline-phase">CURRENT ORBIT: GEOSTATIONARY INSERTION</span>
+          </div>
+          <div class="mc__timeline-track">
+            <div class="mc__timeline-line"></div>
+            <div class="mc__timeline-step mc__timeline-step--done" data-phase="T0">
+              <div class="mc__step-dot"></div>
+              <div class="mc__step-label">T0 LAUNCH</div>
+            </div>
+            <div class="mc__timeline-step mc__timeline-step--active mc__timeline-step--selected" data-phase="GEO">
+              <div class="mc__step-dot"></div>
+              <div class="mc__step-label">LEO / GEO INSERTION</div>
+            </div>
+            <div class="mc__timeline-step" data-phase="TLI">
+              <div class="mc__step-dot"></div>
+              <div class="mc__step-label">TRANSLUNAR INJECTION</div>
+            </div>
+            <div class="mc__timeline-step" data-phase="LUNA">
+              <div class="mc__step-dot"></div>
+              <div class="mc__step-label">LUNAR GATEWAY FLYBY</div>
+            </div>
+            <div class="mc__timeline-step" data-phase="MARS">
+              <div class="mc__step-dot"></div>
+              <div class="mc__step-label">TRANSMARS INJECTION</div>
+            </div>
+          </div>
+        </footer>
+
+        <!-- 5. PHASE 3: NASA DATA INTELLIGENCE LAYER (Expandable Scientific Matrix & Visualizations) -->
+        <aside id="mc-science-panel" class="mc__science-panel" aria-label="NASA Scientific Data Intelligence Layer" aria-hidden="true">
+          <div class="mc__science-header">
+            <div class="mc__science-header-left">
+              <div class="mc__science-kicker">
+                <span class="mc__science-kicker-dot"></span>
+                <span>NASA / JPL SCIENTIFIC INTELLIGENCE MATRIX</span>
+              </div>
+              <h2 id="mc-science-dest-name" class="mc__science-title">EARTH // TERRA-1</h2>
+              <div id="mc-science-dest-class" class="mc__science-subtitle">Terrestrial Habitable Planet</div>
+            </div>
+
+            <div class="mc__science-header-right">
+              <div id="mc-science-status" class="mc__science-status mc__science-status--verified">
+                ◈ VERIFIED STATIC // NASA GSFC ARCHIVE
+              </div>
+              <div id="mc-science-provenance" class="mc__science-provenance">
+                NASA Goddard Space Flight Center NSSDC Archive
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Filters -->
+          <div class="mc__science-tabs" role="tablist" aria-label="Scientific Metric Categories">
+            <button class="mc__science-tab mc__science-tab--active" data-filter="ALL" type="button" role="tab" aria-selected="true">ALL METRICS</button>
+            <button class="mc__science-tab" data-filter="PHYSICAL" type="button" role="tab" aria-selected="false">PHYSICAL</button>
+            <button class="mc__science-tab" data-filter="ORBITAL" type="button" role="tab" aria-selected="false">ORBITAL</button>
+            <button class="mc__science-tab" data-filter="ATMOSPHERIC" type="button" role="tab" aria-selected="false">ATMOSPHERE</button>
+            <button class="mc__science-tab" data-filter="ENVIRONMENTAL" type="button" role="tab" aria-selected="false">ENVIRONMENT</button>
+          </div>
+
+          <!-- Body: Two-Column Layout (Visualizations + Structured Metrics Matrix) -->
+          <div class="mc__science-body">
+            <!-- Left Column: Meaningful Scientific Visualizations -->
+            <div class="mc__science-visualizations">
+              <!-- Gravity & Weight Simulation -->
+              <div id="mc-gravity-vis"></div>
+
+              <!-- Interactive Mass Simulator Slider -->
+              <div class="mc__sim-control">
+                <div class="mc__sim-header">
+                  <label for="mc-mass-input" class="mc__sim-label">ASTRONAUT / PAYLOAD MASS:</label>
+                  <span id="mc-mass-val" class="mc__sim-val">75 kg</span>
+                </div>
+                <input id="mc-mass-input" class="mc__sim-slider" type="range" min="20" max="250" value="75" step="5" />
+                <div class="mc__sim-scale">
+                  <span>20 kg</span>
+                  <span>75 kg (Std Crew)</span>
+                  <span>150 kg (Full EVA Suit)</span>
+                  <span>250 kg</span>
+                </div>
+              </div>
+
+              <!-- Planetary Physical Scale vs Visualization Scale -->
+              <div id="mc-scale-vis"></div>
+
+              <!-- Atmospheric Pressure & Composition Spectrum -->
+              <div id="mc-atmo-vis"></div>
+            </div>
+
+            <!-- Right Column: Contextual Scientific Metrics Cards (Value -> Meaning -> Impact) -->
+            <div class="mc__science-metrics-col">
+              <div class="mc__metrics-title-row">
+                <span class="mc__metrics-title">VERIFIED SCIENTIFIC PARAMETERS</span>
+                <span class="mc__metrics-hint">CLICK [SRC ↗] TO INSPECT PROVENANCE</span>
+              </div>
+              <div id="mc-science-metrics" class="mc__science-metrics-grid">
+                <!-- Dynamically populated from ScientificDataHUD -->
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 6. Source Transparency Inspector Modal -->
+        <div id="mc-source-modal" class="mc__source-modal" aria-hidden="true" role="dialog" aria-modal="true">
+          <div class="mc__source-dialog">
+            <button id="mc-source-modal-close" class="mc__source-close-btn" type="button" aria-label="Close source transparency inspector">✕</button>
+            <div id="mc-source-modal-body" class="mc__source-modal-content">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. PHASE 4: INTERACTIVE SCENARIO ENGINE ("WHAT HAPPENS IF?") -->
+        <aside id="mc-scenario-hub" class="mc__scenario-hub" aria-label="Interactive What Happens If? Scenario Engine" aria-hidden="true">
+          <div class="mc__scenario-header">
+            <div class="mc__scenario-header-left">
+              <div class="mc__scenario-kicker">
+                <span class="mc__scenario-kicker-beacon"></span>
+                <span>WHAT HAPPENS IF? // SCIENTIFIC SCENARIO ENGINE</span>
+              </div>
+              <h2 id="mc-scenario-title" class="mc__scenario-title">DEEP SPACE COMMUNICATION DELAY</h2>
+              <div id="mc-scenario-subtitle" class="mc__scenario-subtitle">Signal Transit Time &amp; Teleoperation Constraints</div>
+            </div>
+
+            <div class="mc__scenario-header-right">
+              <button id="mc-scenario-compare-btn" class="mc__scenario-compare-btn" type="button" title="Compare Earth vs Moon vs Mars">
+                <span>COMPARE ALL WORLDS</span>
+              </button>
+              <button id="mc-scenario-close" class="mc__scenario-close-btn" type="button" aria-label="Close Scenario Hub">✕</button>
+            </div>
+          </div>
+
+          <!-- Scenario Selection Tabs -->
+          <nav class="mc__scenario-tabs" aria-label="Scenario navigation">
+            <button class="mc__scenario-tab mc__scenario-tab--active" data-scenario="COMMUNICATION_DELAY" type="button" aria-selected="true">
+              <span class="mc__stab-idx">01</span>
+              <span>COMMUNICATION DELAY</span>
+            </button>
+            <button class="mc__scenario-tab" data-scenario="GRAVITY_EXPERIENCE" type="button" aria-selected="false">
+              <span class="mc__stab-idx">02</span>
+              <span>GRAVITY &amp; BIOMECHANICS</span>
+            </button>
+            <button class="mc__scenario-tab" data-scenario="TRAVEL_TRAJECTORY" type="button" aria-selected="false">
+              <span class="mc__stab-idx">03</span>
+              <span>ORBITAL TRAJECTORY</span>
+            </button>
+            <button class="mc__scenario-tab" data-scenario="SOLAR_ENVIRONMENT" type="button" aria-selected="false">
+              <span class="mc__stab-idx">04</span>
+              <span>SOLAR ENVIRONMENT</span>
+            </button>
+          </nav>
+
+          <!-- Main Interactive Body -->
+          <div class="mc__scenario-body">
+            <!-- Left Column: Condition Inputs & Controls -->
+            <div id="mc-scenario-controls" class="mc__scenario-controls-col">
+              <!-- Dynamically populated from ScenarioHubHUD -->
+            </div>
+
+            <!-- Right Column: Derived Results, Explanations, Assumptions & Sources -->
+            <div id="mc-scenario-results" class="mc__scenario-results-col">
+              <!-- Dynamically populated from ScenarioHubHUD -->
+            </div>
+
+            <!-- Comparison Mode Box (Hidden by default, shown when Compare clicked) -->
+            <div id="mc-scenario-comparison" class="mc__scenario-comparison-view" style="display: none;">
+              <!-- Dynamically populated from ScenarioHubHUD -->
+            </div>
+          </div>
+        </aside>
+        
+        <!-- 8. Subtle Ambient Unexpected Discovery Beacon -->
+        <aside id="mc-discovery-beacon" class="mc__discovery-beacon" aria-hidden="true" role="status">
+          <div class="mc__beacon-inner">
+            <span class="mc__beacon-glow-pulse" aria-hidden="true"></span>
+            <div class="mc__beacon-text-col">
+              <span class="mc__beacon-kicker">✦ UNEXPECTED DISCOVERY DETECTED</span>
+              <div id="mc-beacon-title" class="mc__beacon-title">MARS // THE BLUE SUNSETS &amp; HIGH-PITCH SOUND EXTINCTION</div>
+            </div>
+            <button id="mc-beacon-action" class="mc__beacon-cta-btn" type="button">
+              <span>INVESTIGATE [SPACE]</span>
+              <span class="mc__beacon-cta-arrow">→</span>
+            </button>
+            <button id="mc-beacon-dismiss" class="mc__beacon-dismiss-btn" type="button" aria-label="Dismiss discovery notification">✕</button>
+          </div>
+        </aside>
+
+        <!-- 9. Hero Unexpected Discovery Focus Overlay -->
+        <div id="mc-discovery-overlay" class="mc__discovery-overlay" aria-hidden="true" role="dialog" aria-modal="true">
+          <div id="mc-discovery-backdrop" class="mc__discovery-backdrop"></div>
+          <div class="mc__discovery-modal">
+            <header class="mc__disc-modal-header">
+              <div class="mc__disc-header-meta">
+                <span id="mc-disc-category" class="mc__disc-badge-cat">PLANETS</span>
+                <span id="mc-disc-rarity" class="mc__disc-badge-rarity">SIGNATURE</span>
+                <span id="mc-disc-type" class="mc__disc-badge-type">COSMIC CONTRADICTION</span>
+              </div>
+              <div class="mc__disc-header-actions">
+                <button id="mc-discovery-humanity-toggle" class="mc__humanity-toggle-btn" type="button" title="Toggle Humanity Mode Experiential Lens">
+                  <span class="mc__humanity-icon">☤</span>
+                  <span>HUMANITY MODE LENS</span>
+                </button>
+                <button id="mc-discovery-close" class="mc__disc-close-btn" type="button" aria-label="Close Discovery Overlay">✕</button>
+              </div>
+            </header>
+
+            <div class="mc__disc-modal-body">
+              <h2 id="mc-disc-title" class="mc__disc-title">The Blue Sunsets and Silent Acoustics of Mars</h2>
+
+              <!-- The Core Triad: FACT -> TWIST -> MEANING -->
+              <div class="mc__disc-triad">
+                <!-- Card 1: FACT -->
+                <div class="mc__disc-card mc__disc-card--fact">
+                  <div class="mc__disc-card-label">
+                    <span class="mc__disc-label-icon">◈</span>
+                    <span>SCIENTIFIC FACT</span>
+                  </div>
+                  <p id="mc-disc-fact" class="mc__disc-card-text">Mars has an atmosphere of 95.3% CO2 at an average surface pressure of only 6.1 hPa...</p>
+                </div>
+
+                <!-- Card 2: TWIST (Hero Card) -->
+                <div class="mc__disc-card mc__disc-card--twist">
+                  <div class="mc__disc-card-label mc__disc-label--twist">
+                    <span class="mc__disc-label-icon">✦</span>
+                    <span>THE SURPRISING TWIST</span>
+                  </div>
+                  <p id="mc-disc-twist" class="mc__disc-card-text">Unlike Earth, Martian sunsets glow cold twilight-blue around the solar disk...</p>
+                </div>
+
+                <!-- Card 3: MEANING -->
+                <div class="mc__disc-card mc__disc-card--meaning">
+                  <div class="mc__disc-card-label">
+                    <span class="mc__disc-label-icon">◎</span>
+                    <span>WHY IT MATTERS</span>
+                  </div>
+                  <p id="mc-disc-meaning" class="mc__disc-card-text">Mie scattering from fine ferric oxide dust selectively scatters blue light forward...</p>
+                </div>
+              </div>
+
+              <!-- The Weird Part (Deeper scientific anomaly) -->
+              <div id="mc-disc-weird-box" class="mc__weird-box">
+                <button id="mc-disc-weird-toggle" class="mc__weird-toggle" type="button" aria-expanded="false">
+                  <span class="mc__weird-label">
+                    <span class="mc__weird-pulse">⚡</span>
+                    <span>THE WEIRD PART // DEEPER ANOMALY</span>
+                  </span>
+                  <span class="mc__weird-icon">+</span>
+                </button>
+                <div id="mc-disc-weird-text" class="mc__weird-content">
+                  If an astronaut screamed with a broken radio at 10 meters distance...
+                </div>
+              </div>
+
+              <!-- Humanity Mode Translation Box -->
+              <div id="mc-disc-humanity-box" class="mc__humanity-box">
+                <div class="mc__humanity-box-header">
+                  <span class="mc__humanity-box-tag">HUMANITY MODE TRANSLATION</span>
+                  <span id="mc-disc-humanity-dim" class="mc__humanity-box-dim">COMMUNICATION &amp; SENSORY</span>
+                </div>
+                <p id="mc-disc-humanity-analogy" class="mc__humanity-analogy">"Human voices on Mars sound muffled and pitched down, as if speaking through thick felt blankets across a whisper distance."</p>
+                <p id="mc-disc-humanity-meaning" class="mc__humanity-subtext">Human speech relies entirely on our nitrogen-oxygen atmospheric density. Beyond Earth, natural acoustic dialogue is an evolutionary privilege.</p>
+              </div>
+
+              <!-- Scientific Source & Provenance Bar -->
+              <div class="mc__disc-source-bar">
+                <div class="mc__disc-source-info">
+                  <span id="mc-disc-source-tag" class="mc__disc-source-tag">SOURCE: NASA-PERSEVERANCE-2022</span>
+                  <span id="mc-disc-source-title" class="mc__disc-source-title">Maurice et al., "In situ recording of Mars soundscape", Nature (2022)</span>
+                </div>
+                <a id="mc-disc-source-link" class="mc__disc-source-link" href="#" target="_blank" rel="noopener noreferrer">
+                  <span>INSPECT SOURCE ↗</span>
+                </a>
+              </div>
+
+              <!-- Related Curiosity Trail (Cross-Topic Knowledge Graph) -->
+              <div class="mc__disc-trail-section">
+                <div class="mc__disc-trail-header">
+                  <span class="mc__disc-trail-title">EXPLORE RELATED CURIOSITY TRAIL</span>
+                  <button id="mc-discovery-next-trail" class="mc__disc-next-btn" type="button">
+                    <span>CONTINUE TRAIL →</span>
+                  </button>
+                </div>
+                <div id="mc-disc-related-list" class="mc__disc-related-grid">
+                  <!-- Dynamically rendered -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PHASE 6: BEYOND THE SOLAR SYSTEM ═══ -->
+
+        <!-- 11. Cosmic Scale Indicator Bar -->
+        <div id="mc-cosmic-scale-bar" class="mc__cosmic-scale" aria-hidden="true" aria-label="Cosmic distance scale">
+          <div class="mc__scale-track">
+            <div class="mc__scale-segment" data-scale="PLANET">
+              <span class="mc__scale-seg-dot"></span>
+              <span class="mc__scale-seg-label">PLANET</span>
+            </div>
+            <div class="mc__scale-segment" data-scale="SOLAR_SYSTEM">
+              <span class="mc__scale-seg-dot"></span>
+              <span class="mc__scale-seg-label">SOLAR SYSTEM</span>
+            </div>
+            <div class="mc__scale-segment mc__scale-segment--active" data-scale="STELLAR">
+              <span class="mc__scale-seg-dot"></span>
+              <span class="mc__scale-seg-label">STELLAR</span>
+            </div>
+            <div class="mc__scale-segment" data-scale="GALACTIC">
+              <span class="mc__scale-seg-dot"></span>
+              <span class="mc__scale-seg-label">GALACTIC</span>
+            </div>
+            <div class="mc__scale-segment" data-scale="EXTRAGALACTIC">
+              <span class="mc__scale-seg-dot"></span>
+              <span class="mc__scale-seg-label">EXTRAGALACTIC</span>
+            </div>
+            <div id="mc-scale-indicator" class="mc__scale-pointer"></div>
+          </div>
+          <div id="mc-scale-label" class="mc__scale-current-label">STELLAR // &lt; 100 LY</div>
+        </div>
+
+        <!-- 12. Deep Space Navigation Buttons -->
+        <button id="mc-deep-space-btn" class="mc__deep-space-btn" type="button" aria-label="Explore Beyond the Solar System" title="Launch into Deep Space">
+          <span class="mc__ds-btn-glow" aria-hidden="true"></span>
+          <span class="mc__ds-btn-icon">✦</span>
+          <span class="mc__ds-btn-text">BEYOND THE SOLAR SYSTEM</span>
+          <span class="mc__ds-btn-arrow">→</span>
+        </button>
+
+        <button id="mc-return-solar-btn" class="mc__return-solar-btn" type="button" aria-label="Return to Solar System">
+          <span class="mc__return-icon">←</span>
+          <span class="mc__return-text">RETURN TO SOLAR SYSTEM</span>
+        </button>
+
+        <!-- 13. Deep Space Explorer Panel -->
+        <aside id="mc-deep-space-explorer" class="mc__ds-explorer" aria-hidden="true" aria-label="Deep Space Object Explorer">
+          <header class="mc__ds-explorer-header">
+            <div class="mc__ds-header-left">
+              <div class="mc__ds-kicker">
+                <span class="mc__ds-kicker-pulse"></span>
+                <span>DEEP SPACE OBJECT CATALOG // PHASE 6</span>
+              </div>
+              <h2 class="mc__ds-explorer-title">BEYOND THE SOLAR SYSTEM</h2>
+            </div>
+          </header>
+
+          <!-- Category Filter Tabs -->
+          <nav class="mc__ds-tabs" role="tablist" aria-label="Deep space category filter">
+            <button class="mc__ds-tab mc__ds-tab--active" data-ds-cat="ALL" type="button" role="tab" aria-selected="true">ALL OBJECTS</button>
+            <button class="mc__ds-tab" data-ds-cat="STARS" type="button" role="tab" aria-selected="false">★ STARS</button>
+            <button class="mc__ds-tab" data-ds-cat="EXOPLANETS" type="button" role="tab" aria-selected="false">◉ EXOPLANETS</button>
+            <button class="mc__ds-tab" data-ds-cat="BLACK_HOLES" type="button" role="tab" aria-selected="false">● BLACK HOLES</button>
+            <button class="mc__ds-tab" data-ds-cat="NEBULAE" type="button" role="tab" aria-selected="false">◎ NEBULAE</button>
+            <button class="mc__ds-tab" data-ds-cat="GALAXIES" type="button" role="tab" aria-selected="false">✦ GALAXIES</button>
+          </nav>
+
+          <!-- Explorer Grid -->
+          <div id="mc-ds-explorer-grid" class="mc__ds-explorer-grid">
+            <!-- Dynamically populated from DeepSpaceHUD -->
+          </div>
+        </aside>
+
+        <!-- 14. Deep Space Object Focus Panel -->
+        <div id="mc-ds-focus-panel" class="mc__ds-focus" aria-hidden="true" role="dialog" aria-modal="true">
+          <div class="mc__ds-focus-inner">
+            <header class="mc__ds-focus-header">
+              <div class="mc__ds-focus-header-left">
+                <h2 id="mc-ds-focus-name" class="mc__ds-focus-name">OBJECT NAME</h2>
+                <div id="mc-ds-focus-designation" class="mc__ds-focus-desig">DESIGNATION</div>
+              </div>
+              <button id="mc-ds-focus-close" class="mc__ds-focus-close" type="button" aria-label="Close deep space focus panel">✕</button>
+            </header>
+
+            <div class="mc__ds-focus-badges">
+              <span id="mc-ds-focus-type" class="mc__ds-focus-type-badge">TYPE</span>
+              <span class="mc__ds-focus-dist-badge">
+                <span class="mc__ds-focus-dist-label">DISTANCE:</span>
+                <span id="mc-ds-focus-distance" class="mc__ds-focus-dist-val">—</span>
+              </span>
+            </div>
+
+            <!-- Scientific Metrics Grid -->
+            <div class="mc__ds-focus-section">
+              <div class="mc__ds-focus-section-header">
+                <span class="mc__ds-section-icon">◈</span>
+                <span>VERIFIED SCIENTIFIC PARAMETERS</span>
+              </div>
+              <div id="mc-ds-focus-metrics" class="mc__ds-metrics-grid">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- The Twist -->
+            <div class="mc__ds-focus-section mc__ds-focus-section--twist">
+              <div class="mc__ds-focus-section-header mc__ds-section-header--twist">
+                <span class="mc__ds-section-icon">✦</span>
+                <span>THE SURPRISING TWIST</span>
+              </div>
+              <p id="mc-ds-focus-twist" class="mc__ds-focus-text">—</p>
+            </div>
+
+            <!-- Humanity Note -->
+            <div class="mc__ds-focus-section mc__ds-focus-section--humanity">
+              <div class="mc__ds-focus-section-header mc__ds-section-header--humanity">
+                <span class="mc__ds-section-icon">☤</span>
+                <span>WHAT THIS MEANS FOR HUMANITY</span>
+              </div>
+              <p id="mc-ds-focus-humanity" class="mc__ds-focus-text">—</p>
+            </div>
+
+            <!-- Source Provenance -->
+            <div class="mc__ds-focus-source">
+              <div class="mc__ds-focus-source-info">
+                <span id="mc-ds-focus-source-tag" class="mc__ds-source-tag">SOURCE: —</span>
+                <span id="mc-ds-focus-source-title" class="mc__ds-source-title">—</span>
+              </div>
+              <div class="mc__ds-source-actions">
+                <button class="mc__ds-how-do-we-know-btn" data-how-do-we-know="CASE_01_EXOPLANET" type="button" title="Inspect scientific evidence in the Observatory">
+                  <span>HOW DO WE KNOW? ↗</span>
+                </button>
+                <a id="mc-ds-focus-source-link" class="mc__ds-source-link" href="#" target="_blank" rel="noopener noreferrer">
+                  <span>INSPECT SOURCE ↗</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 10. Cosmic Discovery Catalog Drawer -->
+        <aside id="mc-discovery-drawer" class="mc__discovery-drawer" aria-hidden="true" role="dialog" aria-label="Cosmic Discovery Catalog">
+          <header class="mc__drawer-header">
+            <div class="mc__drawer-header-left">
+              <span class="mc__drawer-kicker">COSMIC DISCOVERY ENGINE</span>
+              <h3 class="mc__drawer-title">KNOWLEDGE EXPLORER</h3>
+            </div>
+            <div class="mc__drawer-header-right">
+              <button id="mc-drawer-surprise-btn" class="mc__drawer-surprise-btn" type="button">
+                <span>✦ UNEXPECTED DISCOVERY</span>
+              </button>
+              <button id="mc-drawer-close" class="mc__drawer-close-btn" type="button" aria-label="Close Discovery Catalog">✕</button>
+            </div>
+          </header>
+
+          <!-- Filter Tabs -->
+          <div class="mc__drawer-filters">
+            <div class="mc__drawer-tabs-row" role="tablist">
+              <button class="mc__drawer-tab mc__drawer-tab--active" data-cat="ALL" role="tab" aria-selected="true">ALL</button>
+              <button class="mc__drawer-tab" data-cat="PLANETS_MOONS" role="tab" aria-selected="false">PLANETS &amp; MOONS</button>
+              <button class="mc__drawer-tab" data-cat="STARS_DEEP" role="tab" aria-selected="false">STARS &amp; RELATIVITY</button>
+              <button class="mc__drawer-tab" data-cat="MISSIONS_TECH" role="tab" aria-selected="false">MISSIONS &amp; TELESCOPES</button>
+              <button class="mc__drawer-tab" data-cat="ASTROBIOLOGY_HUMAN" role="tab" aria-selected="false">HUMAN &amp; LIFE</button>
+            </div>
+            <div class="mc__drawer-search-row">
+              <input id="mc-drawer-search" class="mc__drawer-search" type="search" placeholder="Search verified discoveries by keyword, topic, or body…" aria-label="Search discoveries">
+            </div>
+          </div>
+
+          <!-- Grid of Discoveries -->
+          <div id="mc-drawer-grid" class="mc__drawer-grid">
+            <!-- Dynamically populated from DiscoveryHUD -->
+          </div>
+        </aside>
+
+        <!-- ═══ PHASE 7: COSMIC OBSERVATORY // EVIDENCE LAB ═══ -->
+        <div id="mc-observatory-overlay" class="mc__observatory" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Cosmic Observatory and Scientific Evidence Lab">
+          <div class="obs__container">
+            <!-- Observatory Top Bar -->
+            <header class="obs__header">
+              <div class="obs__header-left">
+                <div class="obs__badge-row">
+                  <span class="obs__kicker-badge">COSMIC OBSERVATORY // EVIDENCE LAB</span>
+                  <span id="obs-status-badge" class="obs__status-badge">STANDBY // ARRAY CALIBRATED</span>
+                </div>
+                <h1 id="obs-target-name" class="obs__target-title">TARGET SELECTION</h1>
+                <div id="obs-target-coords" class="obs__target-coords">RA 00h 00m 00s | DEC +00° 00′ 00″</div>
+              </div>
+              <div class="obs__header-center">
+                <div id="obs-instrument-name" class="obs__instrument">CALIBRATING HIGH-PRECISION SPECTROGRAPH / PHOTOMETER…</div>
+                <div id="obs-notice" class="obs__notice">EDUCATIONAL SCIENTIFIC VISUALIZATION</div>
+              </div>
+              <div class="obs__header-right">
+                <button id="obs-close-btn" class="obs__close-btn" type="button" aria-label="Exit Cosmic Observatory">✕</button>
+              </div>
+            </header>
+
+            <!-- Case Selection Bar -->
+            <nav id="obs-case-tabs" class="obs__case-nav" role="tablist" aria-label="Scientific Investigation Cases">
+              <!-- Dynamically rendered from ObservatoryHUD -->
+            </nav>
+
+            <!-- Wavelength Multi-Spectral Filter Bar -->
+            <div class="obs__wavelength-bar">
+              <div class="obs__wave-label">
+                <span class="obs__wave-icon">◈</span>
+                <span>SPECTRAL REGIME:</span>
+              </div>
+              <div id="obs-wavelength-selector" class="obs__wave-tabs">
+                <!-- Dynamically rendered -->
+              </div>
+              <div id="obs-wavelength-note" class="obs__wave-note">Select a spectral band to inspect specific physical processes.</div>
+            </div>
+
+            <!-- Investigation Workbench -->
+            <div id="obs-workbench-panel" class="obs__workbench">
+              <!-- Left Column: Visual Data Lab & Canvas -->
+              <div class="obs__col-left">
+                <div class="obs__canvas-card">
+                  <div class="obs__card-top">
+                    <span class="obs__card-tag">INSTRUMENT TELEMETRY &amp; MEASUREMENT</span>
+                    <span class="obs__card-subtag">INTERACTIVE SCIENTIFIC DATA LAB</span>
+                  </div>
+                  <div class="obs__canvas-wrapper">
+                    <canvas id="obs-interactive-canvas" class="obs__canvas"></canvas>
+                  </div>
+                  <div id="obs-canvas-controls" class="obs__controls-bar">
+                    <!-- Dynamic interactive controls (sliders, scrubbers, probes) -->
+                  </div>
+                </div>
+
+                <!-- Investigation Step Indicators -->
+                <div class="obs__steps-tracker" role="tablist" aria-label="Investigation Steps">
+                  <button class="obs__step-btn obs__step-btn--active" data-step="1" type="button">
+                    <span class="obs__step-num">01</span>
+                    <span class="obs__step-name">OBSERVATION</span>
+                  </button>
+                  <button class="obs__step-btn" data-step="2" type="button">
+                    <span class="obs__step-num">02</span>
+                    <span class="obs__step-name">MEASUREMENT</span>
+                  </button>
+                  <button class="obs__step-btn" data-step="3" type="button">
+                    <span class="obs__step-num">03</span>
+                    <span class="obs__step-name">PATTERN &amp; INTERPRETATION</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Right Column: Scientific Evidence Dossier -->
+              <div class="obs__col-right">
+                <div class="obs__evidence-dossier">
+                  <div class="obs__dossier-header">
+                    <span id="obs-evidence-step-tag" class="obs__evidence-tag">EVIDENCE STEP 01 // TYPE: OBSERVATION</span>
+                    <h2 id="obs-evidence-title" class="obs__evidence-title">OBSERVATION TITLE</h2>
+                  </div>
+
+                  <!-- Empirical Observation Text -->
+                  <div class="obs__evidence-block">
+                    <div class="obs__block-header">
+                      <span class="obs__block-icon">◎</span>
+                      <span>EMPIRICAL OBSERVATION</span>
+                    </div>
+                    <p id="obs-evidence-observation" class="obs__block-body">—</p>
+                  </div>
+
+                  <!-- Structured Numerical Telemetry Grid -->
+                  <div class="obs__evidence-block">
+                    <div class="obs__block-header">
+                      <span class="obs__block-icon">◈</span>
+                      <span>ACQUIRED DATA &amp; PARAMETERS</span>
+                    </div>
+                    <div id="obs-evidence-data-grid" class="obs__data-grid">
+                      <!-- Dynamically populated -->
+                    </div>
+                  </div>
+
+                  <!-- Physical Interpretation -->
+                  <div class="obs__evidence-block obs__evidence-block--interp">
+                    <div class="obs__block-header">
+                      <span class="obs__block-icon">✦</span>
+                      <span>SCIENTIFIC INTERPRETATION</span>
+                    </div>
+                    <p id="obs-evidence-interpretation" class="obs__block-body">—</p>
+                  </div>
+
+                  <!-- Confidence / Uncertainty Context -->
+                  <div class="obs__evidence-block obs__evidence-block--confidence">
+                    <div class="obs__block-header">
+                      <span class="obs__block-icon">☤</span>
+                      <span>CONFIDENCE &amp; UNCERTAINTY CONTEXT</span>
+                    </div>
+                    <p id="obs-evidence-confidence" class="obs__block-body">—</p>
+                  </div>
+
+                  <!-- Provenance & Source -->
+                  <div class="obs__evidence-source-row">
+                    <div class="obs__source-info">
+                      <span class="obs__source-label">AUTHORITATIVE SOURCE:</span>
+                      <span id="obs-evidence-source" class="obs__source-title">—</span>
+                    </div>
+                    <a id="obs-evidence-source-link" class="obs__source-link" href="#" target="_blank" rel="noopener noreferrer">
+                      <span>INSPECT DATASET ↗</span>
+                    </a>
+                  </div>
+
+                  <!-- Step Navigation -->
+                  <div class="obs__evidence-actions">
+                    <button id="obs-prev-step-btn" class="obs__nav-btn" type="button">
+                      <span>← PREVIOUS EVIDENCE</span>
+                    </button>
+                    <button id="obs-next-step-btn" class="obs__nav-btn obs__nav-btn--next" type="button">
+                      <span>NEXT EVIDENCE →</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conclusion Synthesizer (Unlocked when evidence steps completed) -->
+            <div id="obs-conclusion-panel" class="obs__conclusion-panel" style="display: none;">
+              <div class="obs__conclusion-header">
+                <div class="obs__conclusion-badge">EVIDENCE COMPLETE // SCIENTIFIC SYNTHESIS</div>
+                <h2 class="obs__conclusion-title">YOUR CONCLUSION &amp; SYNTHESIS</h2>
+                <p class="obs__conclusion-subtitle">Compare empirical observations against physical inference, theoretical modeling, and honest scientific uncertainty.</p>
+              </div>
+
+              <div class="obs__synthesis-grid">
+                <!-- 1. Observed -->
+                <div class="obs__synth-card obs__synth-card--observed">
+                  <div class="obs__synth-card-header">
+                    <span class="obs__badge-observed">OBSERVED</span>
+                    <span class="obs__synth-tag">EMPIRICAL DATA</span>
+                  </div>
+                  <p id="obs-conclusion-observed" class="obs__synth-text">—</p>
+                </div>
+
+                <!-- 2. Inferred -->
+                <div class="obs__synth-card obs__synth-card--inferred">
+                  <div class="obs__synth-card-header">
+                    <span class="obs__badge-inferred">INFERRED</span>
+                    <span class="obs__synth-tag">LOGICAL DEDUCTION</span>
+                  </div>
+                  <p id="obs-conclusion-suggests" class="obs__synth-text">—</p>
+                </div>
+
+                <!-- 3. What We Can Conclude -->
+                <div class="obs__synth-card obs__synth-card--conclude">
+                  <div class="obs__synth-card-header">
+                    <span class="obs__badge-conclude">CONCLUSION</span>
+                    <span class="obs__synth-tag">VERIFIED FINDING</span>
+                  </div>
+                  <p id="obs-conclusion-can-conclude" class="obs__synth-text">—</p>
+                </div>
+
+                <!-- 4. What Remains Uncertain -->
+                <div class="obs__synth-card obs__synth-card--uncertain">
+                  <div class="obs__synth-card-header">
+                    <span class="obs__badge-uncertain">UNCERTAINTY</span>
+                    <span class="obs__synth-tag">SCIENTIFIC BOUNDARY</span>
+                  </div>
+                  <p id="obs-conclusion-uncertain" class="obs__synth-text">—</p>
+                </div>
+              </div>
+
+              <!-- Humanity Meaning Section -->
+              <div class="obs__humanity-card">
+                <div class="obs__humanity-header">
+                  <span class="obs__humanity-icon">✦</span>
+                  <span class="obs__humanity-title">WHAT THIS MEANS FOR HUMANITY</span>
+                </div>
+                <p id="obs-conclusion-humanity" class="obs__humanity-body">—</p>
+              </div>
+
+              <!-- Actions -->
+              <div class="obs__conclusion-actions">
+                <button id="obs-back-to-evidence-btn" class="obs__nav-btn" type="button">
+                  <span>← RETURN TO EVIDENCE WORKBENCH</span>
+                </button>
+                <button id="obs-conclusion-related-btn" class="obs__action-btn obs__action-btn--glow" type="button">
+                  <span>✦ EXPLORE RELATED DISCOVERY ↗</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PHASE 8: CINEMATIC VISUAL SYSTEM // PHENOMENA LAB ═══ -->
+        <section id="mc-phenomena-overlay" class="mc__phenomena" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Phenomena Cinematic Exploration System">
+          <div class="ph__container">
+            <!-- Top Navigation & Status -->
+            <header class="ph__header">
+              <div class="ph__header-left">
+                <div class="ph__brand-row">
+                  <span class="ph__kicker">CINEMATIC VISUAL SYSTEM // PHASE 8</span>
+                  <span id="ph-badge" class="ph__badge ph__badge--real-data">REAL DATA</span>
+                </div>
+                <h1 id="ph-title" class="ph__title">PHENOMENA TITLE</h1>
+                <div id="ph-subtitle" class="ph__subtitle">PHENOMENA SUBTITLE</div>
+              </div>
+              <div class="ph__header-center">
+                <!-- Mode Navigation Tabs (01 to 08) -->
+                <nav id="ph-nav-tabs" class="ph__nav-tabs" role="tablist" aria-label="Phenomena Navigation"></nav>
+              </div>
+              <div class="ph__header-right">
+                <div class="ph__sys-controls">
+                  <div class="ph__quality-box">
+                    <label for="ph-quality-select" class="ph__quality-label">QUALITY:</label>
+                    <select id="ph-quality-select" class="ph__quality-select">
+                      <option value="HIGH" selected>HIGH (4K)</option>
+                      <option value="MEDIUM">MED</option>
+                      <option value="LOW">LOW</option>
+                    </select>
+                  </div>
+                  <button id="ph-audio-toggle" class="ph__audio-toggle" type="button" aria-pressed="false" title="Toggle Sound Feedback">
+                    <span class="ph__audio-icon">♪</span>
+                    <span class="ph__audio-label">AUDIO: MUTED</span>
+                  </button>
+                  <button id="ph-close-btn" class="ph__close-btn" type="button" aria-label="Exit Phenomena Lab">✕</button>
+                </div>
+                <div id="ph-source" class="ph__source-readout">DATASET / PROVENANCE</div>
+              </div>
+            </header>
+
+            <!-- Main Spatial Arena (Floating in-scene panels) -->
+            <div class="ph__arena">
+              <!-- Left In-Scene Callout Panel -->
+              <aside id="ph-spatial-left" class="ph__spatial-col ph__spatial-col--left" aria-label="Phenomenon focal metrics"></aside>
+
+              <!-- Center Viewport Area (Canvas underneath) -->
+              <div class="ph__center-viewport">
+                <div class="ph__reticle-crosshair">
+                  <div class="ph__crosshair-c"></div>
+                </div>
+              </div>
+
+              <!-- Right In-Scene Callout Panel -->
+              <aside id="ph-spatial-right" class="ph__spatial-col ph__spatial-col--right" aria-label="Phenomenon derived readouts"></aside>
+            </div>
+
+            <!-- Bottom Tactical Instrument Control Dock -->
+            <footer class="ph__instrument-dock">
+              <div class="ph__dock-header">
+                <span class="ph__dock-tag">TACTICAL INSTRUMENT CONTROLS</span>
+                <span class="ph__dock-status">REAL-TIME PARAMETER MODULATION</span>
+              </div>
+              <div id="ph-instrument-controls" class="ph__dock-body">
+                <!-- Dynamically generated controls based on active phenomenon -->
+              </div>
+            </footer>
+          </div>
+        </section>
+
+        <!-- ═══ PHASE 9: MISSION ARCHITECT // THE COSMIC MISSION COMPOSER ═══ -->
+        <section id="mc-architect-overlay" class="mc__architect" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Mission Architect: The Cosmic Mission Composer">
+          <div class="arch__container">
+            <!-- Top Navigation & Status Bar -->
+            <header class="arch__header">
+              <div class="arch__header-left">
+                <div class="arch__brand-row">
+                  <span class="arch__kicker">THE COSMIC MISSION COMPOSER // PHASE 9</span>
+                  <span class="arch__badge arch__badge--concept">EDUCATIONAL MISSION CONCEPT</span>
+                </div>
+                <h1 id="arch-mission-title" class="arch__title">MISSION ARCHITECT // ARES-ATMOS-01</h1>
+                <div id="arch-mission-subtitle" class="arch__subtitle">CHARACTERIZE ATMOSPHERE &amp; ESCAPE PROCESSES @ MARS</div>
+              </div>
+
+              <!-- Step Navigation Tabs (01 to 05) -->
+              <div class="arch__header-center">
+                <nav class="arch__step-nav" role="tablist" aria-label="Mission Architect Workflow">
+                  <button class="arch__step-tab arch__step-tab--active" data-step="TARGET" type="button">
+                    <span class="arch__step-idx">01</span>
+                    <span class="arch__step-name">TARGET</span>
+                  </button>
+                  <button class="arch__step-tab" data-step="OBJECTIVE" type="button">
+                    <span class="arch__step-idx">02</span>
+                    <span class="arch__step-name">OBJECTIVE</span>
+                  </button>
+                  <button class="arch__step-tab" data-step="METHOD" type="button">
+                    <span class="arch__step-idx">03</span>
+                    <span class="arch__step-name">METHOD</span>
+                  </button>
+                  <button class="arch__step-tab" data-step="CONSTRAINTS" type="button">
+                    <span class="arch__step-idx">04</span>
+                    <span class="arch__step-name">CONSTRAINTS</span>
+                  </button>
+                  <button class="arch__step-tab" data-step="ASSEMBLY" type="button">
+                    <span class="arch__step-idx">05</span>
+                    <span class="arch__step-name">ASSEMBLY</span>
+                  </button>
+                </nav>
+              </div>
+
+              <div class="arch__header-right">
+                <button id="arch-close-btn" class="arch__close-btn" type="button" aria-label="Exit Mission Architect">✕</button>
+              </div>
+            </header>
+
+            <!-- Main Spatial Architecture Deck -->
+            <div class="arch__deck">
+              <!-- Left Column: Decision Workspace (Step Views) -->
+              <main class="arch__decision-workspace">
+                <div id="arch-steps-container" class="arch__steps-container">
+                  <!-- Step 1: Target Selection -->
+                  <div class="arch__step-section" data-step-section="TARGET">
+                    <div class="arch__section-banner">
+                      <h2>SELECT SCIENTIFIC TARGET DESTINATION</h2>
+                      <p>Choose an astronomically verified body with empirical NASA/JPL/ESA telemetry cataloged in the application.</p>
+                    </div>
+                    <div id="arch-target-grid" class="arch__grid arch__grid--targets"></div>
+                  </div>
+
+                  <!-- Step 2: Scientific Objective -->
+                  <div class="arch__step-section" data-step-section="OBJECTIVE" style="display: none;">
+                    <div class="arch__section-banner">
+                      <h2>FORMULATE SCIENTIFIC MISSION OBJECTIVE</h2>
+                      <p>Select what physical phenomenon or planetary property your mission will investigate.</p>
+                    </div>
+                    <div id="arch-objective-grid" class="arch__grid arch__grid--objectives"></div>
+                  </div>
+
+                  <!-- Step 3: Observation Method -->
+                  <div class="arch__step-section" data-step-section="METHOD" style="display: none;">
+                    <div class="arch__section-banner">
+                      <h2>CHOOSE OBSERVATION METHOD &amp; INSTRUMENTATION</h2>
+                      <p>Select the physical detection method capable of resolving the diagnostic metrics of your objective.</p>
+                    </div>
+                    <div id="arch-method-grid" class="arch__grid arch__grid--methods"></div>
+                  </div>
+
+                  <!-- Step 4: Mission Constraints -->
+                  <div class="arch__step-section" data-step-section="CONSTRAINTS" style="display: none;">
+                    <div class="arch__section-banner">
+                      <h2>SPECIFY EDUCATIONAL MISSION CONSTRAINTS</h2>
+                      <p>Define propulsion, telecommunication bandwidth, and environmental thermal architecture.</p>
+                    </div>
+                    <div id="arch-constraints-panel" class="arch__constraints-panel"></div>
+                  </div>
+
+                  <!-- Step 5: Assembly Overview -->
+                  <div class="arch__step-section" data-step-section="ASSEMBLY" style="display: none;">
+                    <div class="arch__section-banner">
+                      <h2>3D SPATIAL MISSION CONCEPT ASSEMBLY</h2>
+                      <p>Your target, spacecraft bus, sensor apertures, and communication vector are assembled in the 3D scene below.</p>
+                    </div>
+                    <div id="arch-assembly-container" class="arch__assembly-container"></div>
+                  </div>
+                </div>
+              </main>
+
+              <!-- Right Column: Scientific Trade-Offs & Integrity Deck -->
+              <aside class="arch__tradeoff-deck" aria-label="Scientific Trade-Offs and Integrity">
+                <!-- Trade-Off Balance Metrics -->
+                <div class="arch__deck-card">
+                  <div class="arch__card-tag">TRADE-OFF ENGINE // BALANCED CONSTRAINTS</div>
+                  <div class="arch__metrics-list">
+                    <div class="arch__metric-bar-group">
+                      <div class="arch__metric-label-row"><span>SCIENCE MERIT:</span> <span>HIGH-IMPACT</span></div>
+                      <div class="arch__bar-track"><div id="arch-metric-science" class="arch__bar-fill arch__bar-fill--cyan"></div></div>
+                    </div>
+                    <div class="arch__metric-bar-group">
+                      <div class="arch__metric-label-row"><span>DATA COMPLEXITY:</span> <span>BANDWIDTH LOAD</span></div>
+                      <div class="arch__bar-track"><div id="arch-metric-data" class="arch__bar-fill arch__bar-fill--blue"></div></div>
+                    </div>
+                    <div class="arch__metric-bar-group">
+                      <div class="arch__metric-label-row"><span>COMMUNICATION DELAY:</span> <span>LIGHT-TIME</span></div>
+                      <div class="arch__bar-track"><div id="arch-metric-comm" class="arch__bar-fill arch__bar-fill--amber"></div></div>
+                    </div>
+                    <div class="arch__metric-bar-group">
+                      <div class="arch__metric-label-row"><span>OBSERVATION RIGOR:</span> <span>POINTING COMPLEXITY</span></div>
+                      <div class="arch__bar-track"><div id="arch-metric-obs" class="arch__bar-fill arch__bar-fill--purple"></div></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Qualitative Trade-Off Callouts -->
+                <div class="arch__deck-card">
+                  <div class="arch__card-tag">QUALITATIVE TRADE-OFF BREAKDOWN</div>
+                  <div class="arch__tradeoff-item">
+                    <span class="arch__trade-badge arch__trade-badge--adv">ADVANTAGE</span>
+                    <p id="arch-adv-text" class="arch__trade-p">—</p>
+                  </div>
+                  <div class="arch__tradeoff-item">
+                    <span class="arch__trade-badge arch__trade-badge--lim">LIMITATION</span>
+                    <p id="arch-lim-text" class="arch__trade-p">—</p>
+                  </div>
+                  <div class="arch__tradeoff-item">
+                    <span class="arch__trade-badge arch__trade-badge--dep">DEPENDENCY</span>
+                    <p id="arch-dep-text" class="arch__trade-p">—</p>
+                  </div>
+                  <div class="arch__tradeoff-item">
+                    <span class="arch__trade-badge arch__trade-badge--open">OPEN QUESTION</span>
+                    <p id="arch-open-q-text" class="arch__trade-p">—</p>
+                  </div>
+                  <div id="arch-power-advisory" class="arch__advisory arch__advisory--ok">Power architecture nominal.</div>
+                </div>
+
+                <!-- Scientific Integrity Checklist -->
+                <div class="arch__deck-card">
+                  <div class="arch__card-tag">MISSION INTEGRITY CHECKLIST</div>
+                  <ul id="arch-integrity-list" class="arch__integrity-list"></ul>
+                </div>
+
+                <!-- Cross-Application Discovery & Evidence Hooks -->
+                <div class="arch__deck-card">
+                  <div class="arch__card-tag">EVIDENCE &amp; CROSS-TOPIC RESEARCH</div>
+                  <div class="arch__cross-links">
+                    <button id="arch-evidence-btn" class="arch__link-btn arch__link-btn--evidence" type="button">
+                      <span>⌖ WHY THIS METHOD? REVIEW EVIDENCE ↗</span>
+                    </button>
+                    <button id="arch-phenomenon-btn" class="arch__link-btn arch__link-btn--phenom" type="button">
+                      <span>✧ EXPLORE PHENOMENON ↗</span>
+                    </button>
+                    <button id="arch-discovery-btn" class="arch__link-btn arch__link-btn--disc" type="button">
+                      <span>✦ UNEXPECTED DISCOVERY CONNECTION ↗</span>
+                    </button>
+                  </div>
+                  <div class="arch__humanity-box">
+                    <span class="arch__humanity-tag">✦ HUMANITY PERSPECTIVE</span>
+                    <p id="arch-humanity-note" class="arch__humanity-text">—</p>
+                  </div>
+                </div>
+              </aside>
+            </div>
+
+            <!-- Bottom Tactical Action Bar -->
+            <footer class="arch__footer-bar">
+              <div class="arch__footer-left">
+                <span class="arch__footer-hint">BUILD A MISSION. FOLLOW THE EVIDENCE. SEE THE TRADE-OFFS.</span>
+              </div>
+              <div class="arch__footer-right">
+                <button id="arch-assemble-btn" class="arch__action-btn arch__action-btn--assemble" type="button">
+                  <span class="arch__btn-icon">⚙</span>
+                  <span>ASSEMBLE MISSION IN 3D</span>
+                </button>
+                <button id="arch-briefing-btn" class="arch__action-btn arch__action-btn--briefing" type="button">
+                  <span class="arch__btn-icon">▶</span>
+                  <span>GENERATE CINEMATIC BRIEFING</span>
+                </button>
+                <button id="arch-dossier-btn" class="arch__action-btn arch__action-btn--dossier" type="button">
+                  <span class="arch__btn-icon">📄</span>
+                  <span>VIEW FULL MISSION DOSSIER</span>
+                </button>
+              </div>
+            </footer>
+          </div>
+
+          <!-- Cinematic Briefing Modal -->
+          <div id="arch-briefing-modal" class="arch__modal" style="display: none;" role="dialog" aria-modal="true">
+            <div class="arch__modal-card arch__modal-card--briefing">
+              <button id="arch-briefing-close" class="arch__modal-close" type="button" aria-label="Close Briefing">✕</button>
+              <div id="arch-briefing-content" class="arch__modal-body"></div>
+            </div>
+          </div>
+
+          <!-- Full Mission Dossier Modal -->
+          <div id="arch-dossier-modal" class="arch__modal" style="display: none;" role="dialog" aria-modal="true">
+            <div class="arch__modal-card arch__modal-card--dossier">
+              <button id="arch-dossier-close" class="arch__modal-close" type="button" aria-label="Close Dossier">✕</button>
+              <div id="arch-dossier-content" class="arch__modal-body"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- PHASE 11: SPACE NOW — Live window into our cosmic environment -->
+        <!-- ============================================================ -->
+        <aside id="mc-space-now" class="mc__space-now" aria-hidden="true" aria-label="Space Now — Live Data">
+          <header class="mc__sn-header">
+            <div class="mc__sn-header-left">
+              <span class="mc__sn-pulse" aria-hidden="true"></span>
+              <h2 class="mc__sn-title">SPACE NOW</h2>
+              <span class="mc__sn-subtitle">A LIVE WINDOW INTO OUR COSMIC ENVIRONMENT</span>
+            </div>
+            <button id="mc-space-now-close" class="mc__sn-close" type="button" aria-label="Close Space Now">✕</button>
+          </header>
+
+          <!-- Data Heartbeat Row -->
+          <div class="mc__sn-heartbeat" aria-live="polite">
+            <div class="mc__sn-hb-item">
+              <span class="mc__sn-hb-label">COSMIC DATA LINK</span>
+              <span class="mc__sn-hb-val mc__sn-hb-val--live">ONLINE</span>
+            </div>
+            <div class="mc__sn-hb-item">
+              <span class="mc__sn-hb-label">NOAA SWPC</span>
+              <span id="mc-sn-hb-sw" class="mc__sn-hb-val">—</span>
+            </div>
+            <div class="mc__sn-hb-item">
+              <span class="mc__sn-hb-label">JPL EPHEMERIS</span>
+              <span id="mc-sn-hb-eph" class="mc__sn-hb-val mc__sn-hb-val--calculated">CALCULATED</span>
+            </div>
+            <div class="mc__sn-hb-item">
+              <span class="mc__sn-hb-label">UPDATED</span>
+              <span id="mc-sn-hb-ts" class="mc__sn-hb-val">—</span>
+            </div>
+          </div>
+
+          <!-- Space Weather Block -->
+          <section class="mc__sn-section">
+            <div class="mc__sn-section-header">
+              <span class="mc__sn-section-label">☀ SPACE WEATHER</span>
+              <span id="mc-sn-sw-badge" class="mc__sn-freshness-badge mc__sn-freshness-badge--unavailable">DATA TEMPORARILY UNAVAILABLE</span>
+            </div>
+
+            <!-- Unavailability banner (shown only when offline) -->
+            <div id="mc-sn-sw-unavail" class="mc__sn-unavail" role="status" style="display:none">
+              <span class="mc__sn-unavail-icon">⚠</span>
+              <span>NOAA SWPC TEMPORARILY UNAVAILABLE — Displaying last verified data where available</span>
+            </div>
+
+            <div class="mc__sn-grid">
+              <div class="mc__sn-row">
+                <span class="mc__sn-label">SOLAR WIND VELOCITY (Vs)</span>
+                <span id="mc-sn-sw-speed" class="mc__sn-value mc__sn-value--unavail">—</span>
+                <span class="mc__sn-unit">ACE/DSCOVR SWEPAM</span>
+              </div>
+              <div class="mc__sn-row">
+                <span class="mc__sn-label">PROTON DENSITY (Np)</span>
+                <span id="mc-sn-sw-density" class="mc__sn-value mc__sn-value--unavail">—</span>
+                <span class="mc__sn-unit">cm⁻³</span>
+              </div>
+              <div class="mc__sn-row">
+                <span class="mc__sn-label">IMF Bz (N–S COMPONENT)</span>
+                <span id="mc-sn-sw-bz" class="mc__sn-value mc__sn-value--unavail">—</span>
+                <span class="mc__sn-unit">nT · negative = southward</span>
+              </div>
+              <div class="mc__sn-row">
+                <span class="mc__sn-label">IMF TOTAL FIELD (Bt)</span>
+                <span id="mc-sn-sw-bt" class="mc__sn-value mc__sn-value--unavail">—</span>
+                <span class="mc__sn-unit">nT</span>
+              </div>
+            </div>
+
+            <!-- Kp Index -->
+            <div class="mc__sn-kp-block">
+              <div class="mc__sn-kp-header">
+                <span class="mc__sn-label">PLANETARY GEOMAGNETIC ACTIVITY (Kp)</span>
+                <span id="mc-sn-kp" class="mc__sn-value mc__sn-value--unavail">—</span>
+              </div>
+              <div class="mc__sn-kp-track" role="progressbar" aria-label="Kp Index" aria-valuemin="0" aria-valuemax="9">
+                <div id="mc-sn-kp-bar" class="mc__sn-kp-bar-fill" style="width:0%"></div>
+              </div>
+              <div class="mc__sn-kp-scale">
+                <span>0 QUIET</span><span>3</span><span>5 STORM</span><span>9 EXTREME</span>
+              </div>
+            </div>
+
+            <div class="mc__sn-source-notice">
+              Source: NOAA SWPC · Educational visualization — not operational mission guidance
+            </div>
+          </section>
+
+          <!-- Planetary Positions Block -->
+          <section class="mc__sn-section">
+            <div class="mc__sn-section-header">
+              <span class="mc__sn-section-label">◎ CURRENT PLANETARY GEOMETRY</span>
+              <span id="mc-sn-eph-badge" class="mc__sn-freshness-badge mc__sn-freshness-badge--calculated">CALCULATED · NOW</span>
+            </div>
+            <div class="mc__sn-planet-label">EDUCATIONAL VISUALIZATION · JPL Approximate Orbital Elements (1800–2050 CE)</div>
+            <div class="mc__sn-grid">
+              <div class="mc__sn-row mc__sn-row--planet">
+                <span class="mc__sn-planet-icon">🌍</span>
+                <span class="mc__sn-label">EARTH</span>
+                <span id="mc-sn-pos-earth-au" class="mc__sn-value">—</span>
+                <span id="mc-sn-pos-earth-lon" class="mc__sn-value mc__sn-value--dim">—</span>
+              </div>
+              <div class="mc__sn-row mc__sn-row--planet">
+                <span class="mc__sn-planet-icon">🔴</span>
+                <span class="mc__sn-label">MARS</span>
+                <span id="mc-sn-pos-mars-au" class="mc__sn-value">—</span>
+                <span id="mc-sn-pos-mars-lon" class="mc__sn-value mc__sn-value--dim">—</span>
+              </div>
+              <div class="mc__sn-row mc__sn-row--planet">
+                <span class="mc__sn-planet-icon">⚪</span>
+                <span class="mc__sn-label">VENUS</span>
+                <span id="mc-sn-pos-venus-au" class="mc__sn-value">—</span>
+                <span id="mc-sn-pos-venus-lon" class="mc__sn-value mc__sn-value--dim">—</span>
+              </div>
+              <div class="mc__sn-row mc__sn-row--planet">
+                <span class="mc__sn-planet-icon">⚫</span>
+                <span class="mc__sn-label">MERCURY</span>
+                <span id="mc-sn-pos-mercury-au" class="mc__sn-value">—</span>
+                <span id="mc-sn-pos-mercury-lon" class="mc__sn-value mc__sn-value--dim">—</span>
+              </div>
+            </div>
+            <div class="mc__sn-col-labels">
+              <span></span><span></span>
+              <span class="mc__sn-col-label">Heliocentric dist.</span>
+              <span class="mc__sn-col-label">Ecliptic lon.</span>
+            </div>
+          </section>
+
+          <!-- Action Links -->
+          <footer class="mc__sn-footer">
+            <button id="mc-sn-view-obs-btn" class="mc__sn-action-btn" type="button">OBSERVE THIS IN EVIDENCE LAB →</button>
+            <button id="mc-sn-view-phen-btn" class="mc__sn-action-btn" type="button">VIEW IN PHENOMENA LAB →</button>
+            <button id="mc-sn-source-btn" class="mc__sn-source-btn" type="button" aria-expanded="false">DATA SOURCES &amp; PROVENANCE ↗</button>
+          </footer>
+
+          <!-- Source Transparency Panel -->
+          <div id="mc-sn-source-panel" class="mc__sn-source-panel" aria-hidden="true">
+            <h3 class="mc__sn-src-title">DATA SOURCES &amp; PROVENANCE</h3>
+            <div id="mc-sn-src-sw" class="mc__sn-src-block"></div>
+            <div id="mc-sn-src-eph" class="mc__sn-src-block"></div>
+          </div>
+        </aside>
+
+        <!-- ============================================================ -->
+        <!-- PHASE 11: COSMIC TIME MACHINE -->
+        <!-- ============================================================ -->
+        <aside id="mc-time-machine" class="mc__time-machine" aria-hidden="true" aria-label="Cosmic Time Machine">
+          <header class="mc__tm-header">
+            <div class="mc__tm-header-left">
+              <span class="mc__tm-icon">⏳</span>
+              <h2 class="mc__tm-title">COSMIC TIME MACHINE</h2>
+            </div>
+            <span id="mc-tm-context-badge" class="mc__tm-context-badge mc__tm-context-badge--live">LIVE // NOW</span>
+            <button id="mc-tm-close" class="mc__tm-close" type="button" aria-label="Close Time Machine">✕</button>
+          </header>
+
+          <div class="mc__tm-subtitle">Navigate through time · Keplerian orbital calculation · 1800–2050 CE</div>
+
+          <!-- Current selected date -->
+          <div class="mc__tm-date-row">
+            <span class="mc__tm-date-label-text">SELECTED DATE</span>
+            <span id="mc-tm-date-label" class="mc__tm-date-value">—</span>
+            <button id="mc-tm-now-btn" class="mc__tm-now-btn" type="button">RETURN TO NOW</button>
+          </div>
+
+          <!-- Year label display -->
+          <div class="mc__tm-year-display">
+            <span id="mc-tm-year-label" class="mc__tm-year-label">2026</span>
+            <span class="mc__tm-year-note">CE</span>
+          </div>
+
+          <!-- Time Slider -->
+          <div class="mc__tm-slider-wrap">
+            <span class="mc__tm-range-min">1800</span>
+            <input
+              id="mc-tm-slider"
+              class="mc__tm-slider"
+              type="range"
+              min="1800" max="2050"
+              value="2026"
+              step="1"
+              aria-label="Time navigation: select year"
+            />
+            <span class="mc__tm-range-max">2050</span>
+          </div>
+
+          <!-- Step Controls -->
+          <div class="mc__tm-controls">
+            <button id="mc-tm-prev10y" class="mc__tm-step-btn" type="button" aria-label="Go back 10 years">−10y</button>
+            <button id="mc-tm-prev1y"  class="mc__tm-step-btn" type="button" aria-label="Go back 1 year">−1y</button>
+            <div class="mc__tm-controls-center">
+              <span class="mc__tm-ctrl-label">NAVIGATE</span>
+            </div>
+            <button id="mc-tm-next1y"  class="mc__tm-step-btn" type="button" aria-label="Go forward 1 year">+1y</button>
+            <button id="mc-tm-next10y" class="mc__tm-step-btn" type="button" aria-label="Go forward 10 years">+10y</button>
+          </div>
+
+          <!-- Planetary Positions at selected time -->
+          <section class="mc__tm-section">
+            <div class="mc__tm-section-header">
+              <span class="mc__tm-section-label">PLANETARY POSITIONS AT SELECTED TIME</span>
+              <span class="mc__tm-calc-badge">CALCULATED · KEPLERIAN</span>
+            </div>
+            <div class="mc__tm-planet-grid">
+              <div class="mc__tm-planet-row">
+                <span class="mc__tm-planet-name">EARTH</span>
+                <span id="mc-tm-pos-earth-au" class="mc__tm-planet-val">—</span>
+                <span id="mc-tm-pos-earth-lon" class="mc__tm-planet-val mc__tm-planet-val--dim">—</span>
+              </div>
+              <div class="mc__tm-planet-row">
+                <span class="mc__tm-planet-name">MARS</span>
+                <span id="mc-tm-pos-mars-au" class="mc__tm-planet-val">—</span>
+                <span id="mc-tm-pos-mars-lon" class="mc__tm-planet-val mc__tm-planet-val--dim">—</span>
+              </div>
+              <div class="mc__tm-planet-row">
+                <span class="mc__tm-planet-name">VENUS</span>
+                <span id="mc-tm-pos-venus-au" class="mc__tm-planet-val">—</span>
+                <span id="mc-tm-pos-venus-lon" class="mc__tm-planet-val mc__tm-planet-val--dim">—</span>
+              </div>
+              <div class="mc__tm-planet-row">
+                <span class="mc__tm-planet-name">MERCURY</span>
+                <span id="mc-tm-pos-mercury-au" class="mc__tm-planet-val">—</span>
+                <span id="mc-tm-pos-mercury-lon" class="mc__tm-planet-val mc__tm-planet-val--dim">—</span>
+              </div>
+            </div>
+            <div class="mc__tm-col-labels">
+              <span></span>
+              <span>Dist. (AU)</span>
+              <span>Ecl. Lon. (°)</span>
+            </div>
+          </section>
+
+          <!-- Compare Mode -->
+          <button id="mc-tm-compare-btn" class="mc__tm-compare-btn" type="button" aria-expanded="false">
+            COMPARE SELECTED TIME vs NOW ↕
+          </button>
+          <div id="mc-tm-compare-panel" class="mc__tm-compare-panel" aria-hidden="true">
+            <div class="mc__tm-cmp-header">
+              <span class="mc__tm-cmp-col">BODY</span>
+              <span class="mc__tm-cmp-col">NOW</span>
+              <span class="mc__tm-cmp-col">SELECTED</span>
+              <span class="mc__tm-cmp-col">ΔDIFF</span>
+            </div>
+            <div id="mc-tm-cmp-earth"   class="mc__tm-cmp-row"></div>
+            <div id="mc-tm-cmp-mars"    class="mc__tm-cmp-row"></div>
+            <div id="mc-tm-cmp-venus"   class="mc__tm-cmp-row"></div>
+            <div id="mc-tm-cmp-mercury" class="mc__tm-cmp-row"></div>
+            <div class="mc__tm-cmp-note">Values: CALCULATED · JPL Approximate Orbital Elements · EDUCATIONAL</div>
+          </div>
+
+          <div class="mc__tm-disclaimer">
+            CALCULATED EPHEMERIS · JPL Table 1 (1800–2050 CE) · ~1 arcminute accuracy ·
+            <a href="https://ssd.jpl.nasa.gov/planets/approx_pos.html" target="_blank" rel="noopener noreferrer">VIEW SOURCE ↗</a>
+          </div>
+        </aside>
+
+        <!-- PHASE 10: PRESENTATION SHOWCASE BAR -->
+        <div id="mc-presentation-bar" class="mc__presentation-bar" aria-hidden="true">
+          <div class="mc__pres-content">
+            <div class="mc__pres-left">
+              <span id="mc-pres-step-badge" class="mc__pres-step-badge">[01 / 09]</span>
+              <div class="mc__pres-info">
+                <span id="mc-pres-title" class="mc__pres-title">AUTONOMOUS FRONTIER</span>
+                <span id="mc-pres-subtitle" class="mc__pres-subtitle">Autonomous Earth Monitoring &amp; Solar System Exploration</span>
+              </div>
+            </div>
+            <div class="mc__pres-controls">
+              <button id="mc-pres-prev-btn" class="mc__pres-btn" type="button" aria-label="Previous step" title="Previous (Left Arrow)">◀</button>
+              <button id="mc-pres-play-btn" class="mc__pres-btn mc__pres-btn--play" type="button" aria-label="Pause / Resume" title="Pause / Resume (Space)">❚❚</button>
+              <button id="mc-pres-next-btn" class="mc__pres-btn" type="button" aria-label="Next step" title="Next (Right Arrow)">▶</button>
+              <span id="mc-pres-timer-pill" class="mc__pres-timer-pill">8s</span>
+              <button id="mc-pres-replay-btn" class="mc__pres-btn mc__pres-btn--replay" type="button" aria-label="Restart experience" title="Restart Replay">↺</button>
+              <button id="mc-pres-finale-btn" class="mc__pres-btn mc__pres-btn--finale" type="button" aria-label="Jump to Final Ending Ceremony" title="Final Ending Ceremony">✦ FINALE</button>
+              <button id="mc-pres-exit-btn" class="mc__pres-btn mc__pres-btn--exit" type="button" aria-label="Exit presentation" title="Exit Presentation (Esc)">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PHASE 10: NARRATIVE CONTEXTUAL SUGGESTION CHIP -->
+        <div id="mc-narrative-chip" class="mc__narrative-chip" aria-hidden="true">
+          <button id="mc-narrative-btn" class="mc__narrative-btn" type="button">
+            <span class="mc__narrative-icon">✦</span>
+            <span id="mc-narrative-text" class="mc__narrative-text">NEXT // Exploration</span>
+          </button>
+          <button id="mc-narrative-close" class="mc__narrative-close" type="button" aria-label="Dismiss suggestion">✕</button>
+        </div>
+
+        <!-- PHASE 10 / FINAL: GROUNDED SCIENTIFIC INSIGHT & FINAL ENDING CEREMONY -->
+        <div id="mc-insight-modal" class="mc__insight-modal" aria-hidden="true" role="dialog" aria-modal="true">
+          <div class="mc__insight-card">
+            <button id="mc-insight-close" class="mc__insight-close-btn" type="button" aria-label="Close insight">✕</button>
+            <div class="mc__insight-header">
+              <span class="mc__insight-badge">✦ SYNTHESIS</span>
+              <span id="mc-insight-kicker" class="mc__insight-kicker">GROUNDED SCIENTIFIC INSIGHT</span>
+            </div>
+            <h2 id="mc-insight-title" class="mc__insight-title">—</h2>
+            <div class="mc__insight-divider"></div>
+            <blockquote id="mc-insight-philosophy" class="mc__insight-philosophy" style="display:none;"></blockquote>
+            <p id="mc-insight-body" class="mc__insight-body">—</p>
+            <div id="mc-insight-citation" class="mc__insight-citation">—</div>
+            <div class="mc__insight-actions">
+              <button id="mc-insight-action" class="mc__insight-action-btn" type="button">CONTINUE EXPLORATION →</button>
+              <button id="mc-insight-replay-btn" class="mc__insight-action-btn mc__insight-action-btn--secondary" type="button" style="display:none;">REPLAY SHOWCASE ↺</button>
+              <button id="mc-insight-sources-btn" class="mc__insight-action-btn mc__insight-action-btn--tertiary" type="button" style="display:none;">DATA SOURCES ↗</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Application Module -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
