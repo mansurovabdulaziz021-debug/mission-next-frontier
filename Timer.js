@@ -1,29 +1,128 @@
-import { renderGroup } from '../core/UniformGroupNode.js';
-import { uniform } from '../core/UniformNode.js';
+class Timer {
 
-export const time = /*@__PURE__*/ uniform( 0 ).setGroup( renderGroup ).onRenderUpdate( ( frame ) => frame.time );
-export const deltaTime = /*@__PURE__*/ uniform( 0 ).setGroup( renderGroup ).onRenderUpdate( ( frame ) => frame.deltaTime );
-export const frameId = /*@__PURE__*/ uniform( 0, 'uint' ).setGroup( renderGroup ).onRenderUpdate( ( frame ) => frame.frameId );
+	constructor() {
 
-// Deprecated
+		this._previousTime = 0;
+		this._currentTime = 0;
+		this._startTime = now();
 
-export const timerLocal = ( timeScale = 1 ) => { // @deprecated, r170
+		this._delta = 0;
+		this._elapsed = 0;
 
-	console.warn( 'TSL: timerLocal() is deprecated. Use "time" instead.' );
-	return time.mul( timeScale );
+		this._timescale = 1;
 
-};
+		// use Page Visibility API to avoid large time delta values
 
-export const timerGlobal = ( timeScale = 1 ) => { // @deprecated, r170
+		this._usePageVisibilityAPI = ( typeof document !== 'undefined' && document.hidden !== undefined );
 
-	console.warn( 'TSL: timerGlobal() is deprecated. Use "time" instead.' );
-	return time.mul( timeScale );
+		if ( this._usePageVisibilityAPI === true ) {
 
-};
+			this._pageVisibilityHandler = handleVisibilityChange.bind( this );
 
-export const timerDelta = ( timeScale = 1 ) => { // @deprecated, r170
+			document.addEventListener( 'visibilitychange', this._pageVisibilityHandler, false );
 
-	console.warn( 'TSL: timerDelta() is deprecated. Use "deltaTime" instead.' );
-	return deltaTime.mul( timeScale );
+		}
 
-};
+	}
+
+	getDelta() {
+
+		return this._delta / 1000;
+
+	}
+
+	getElapsed() {
+
+		return this._elapsed / 1000;
+
+	}
+
+	getTimescale() {
+
+		return this._timescale;
+
+	}
+
+	setTimescale( timescale ) {
+
+		this._timescale = timescale;
+
+		return this;
+
+	}
+
+	reset() {
+
+		this._currentTime = now() - this._startTime;
+
+		return this;
+
+	}
+
+	dispose() {
+
+		if ( this._usePageVisibilityAPI === true ) {
+
+			document.removeEventListener( 'visibilitychange', this._pageVisibilityHandler );
+
+		}
+
+		return this;
+
+	}
+
+	update( timestamp ) {
+
+
+		if ( this._usePageVisibilityAPI === true && document.hidden === true ) {
+
+			this._delta = 0;
+
+		} else {
+
+			this._previousTime = this._currentTime;
+			this._currentTime = ( timestamp !== undefined ? timestamp : now() ) - this._startTime;
+
+			this._delta = ( this._currentTime - this._previousTime ) * this._timescale;
+			this._elapsed += this._delta; // _elapsed is the accumulation of all previous deltas
+
+		}
+
+		return this;
+
+	}
+
+}
+
+class FixedTimer extends Timer {
+
+	constructor( fps = 60 ) {
+
+		super();
+		this._delta = ( 1 / fps ) * 1000;
+
+	}
+
+	update() {
+
+		this._elapsed += ( this._delta * this._timescale ); // _elapsed is the accumulation of all previous deltas
+
+		return this;
+
+	}
+
+}
+
+function now() {
+
+	return performance.now();
+
+}
+
+function handleVisibilityChange() {
+
+	if ( document.hidden === false ) this.reset();
+
+}
+
+export { Timer, FixedTimer };
