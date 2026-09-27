@@ -1,32 +1,8 @@
-Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-//#region \0rolldown/runtime.js
-var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
-		key = keys[i];
-		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
-			get: ((k) => from[k]).bind(null, key),
-			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
-		});
-	}
-	return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
-	value: mod,
-	enumerable: true
-}) : target, mod));
-//#endregion
-let fs = require("fs");
-let path = require("path");
-let url = require("url");
-let fdir = require("fdir");
-let picomatch = require("picomatch");
-picomatch = __toESM(picomatch, 1);
+import { readdir, readdirSync, realpath, realpathSync, stat, statSync } from "fs";
+import { isAbsolute, posix, resolve } from "path";
+import { fileURLToPath } from "url";
+import { fdir } from "fdir";
+import picomatch from "picomatch";
 //#region src/utils.ts
 const isReadonlyArray = Array.isArray;
 const BACKSLASHES = /\\/g;
@@ -43,7 +19,7 @@ function getPartialMatcher(patterns, options = {}) {
 		patternsParts[i] = parts;
 		const partsCount = parts.length;
 		const partMatchers = Array(partsCount);
-		for (j = 0; j < partsCount; j++) partMatchers[j] = (0, picomatch.default)(parts[j], options);
+		for (j = 0; j < partsCount; j++) partMatchers[j] = picomatch(parts[j], options);
 		matchers[i] = partMatchers;
 	}
 	return (input) => {
@@ -84,8 +60,8 @@ function buildFormat(cwd, root, absolute) {
 		};
 		return (p, isDir) => isDir && p !== "." ? p.slice(0, -1) : p;
 	}
-	if (absolute) return (p) => path.posix.relative(cwd, p) || ".";
-	return (p) => path.posix.relative(cwd, `${root}/${p}`) || ".";
+	if (absolute) return (p) => posix.relative(cwd, p) || ".";
+	return (p) => posix.relative(cwd, `${root}/${p}`) || ".";
 }
 function buildRelative(cwd, root) {
 	if (root.startsWith(`${cwd}/`)) {
@@ -93,25 +69,25 @@ function buildRelative(cwd, root) {
 		return (p) => `${prefix}/${p}`;
 	}
 	return (p) => {
-		const result = path.posix.relative(cwd, `${root}/${p}`);
+		const result = posix.relative(cwd, `${root}/${p}`);
 		return p[p.length - 1] === "/" && result !== "" ? `${result}/` : result || ".";
 	};
 }
-function ensureNonDriveRelativePath(path$1) {
-	return path$1.replace(DRIVE_RELATIVE_PATH, (match) => `${match}/`);
+function ensureNonDriveRelativePath(path) {
+	return path.replace(DRIVE_RELATIVE_PATH, (match) => `${match}/`);
 }
 const splitPatternOptions = { parts: true };
-function splitPattern(path$2) {
+function splitPattern(path) {
 	var _result$parts;
-	const result = picomatch.default.scan(path$2, splitPatternOptions);
-	return ((_result$parts = result.parts) === null || _result$parts === void 0 ? void 0 : _result$parts.length) ? result.parts : [path$2];
+	const result = picomatch.scan(path, splitPatternOptions);
+	return ((_result$parts = result.parts) === null || _result$parts === void 0 ? void 0 : _result$parts.length) ? result.parts : [path];
 }
 const ESCAPED_WIN32_BACKSLASHES = /\\(?![()[\]{}!+@])/g;
-function convertPosixPathToPattern(path$3) {
-	return escapePosixPath(path$3);
+function convertPosixPathToPattern(path) {
+	return escapePosixPath(path);
 }
-function convertWin32PathToPattern(path$4) {
-	return escapeWin32Path(path$4).replace(ESCAPED_WIN32_BACKSLASHES, "/");
+function convertWin32PathToPattern(path) {
+	return escapeWin32Path(path).replace(ESCAPED_WIN32_BACKSLASHES, "/");
 }
 /**
 * Converts a path to a pattern depending on the platform.
@@ -122,8 +98,8 @@ function convertWin32PathToPattern(path$4) {
 const convertPathToPattern = isWin ? convertWin32PathToPattern : convertPosixPathToPattern;
 const POSIX_UNESCAPED_GLOB_SYMBOLS = /(?<!\\)([()[\]{}*?|]|^!|[!+@](?=\()|\\(?![()[\]{}!*+?@|]))/g;
 const WIN32_UNESCAPED_GLOB_SYMBOLS = /(?<!\\)([()[\]{}]|^!|[!+@](?=\())/g;
-const escapePosixPath = (path$5) => path$5.replace(POSIX_UNESCAPED_GLOB_SYMBOLS, "\\$&");
-const escapeWin32Path = (path$6) => path$6.replace(WIN32_UNESCAPED_GLOB_SYMBOLS, "\\$&");
+const escapePosixPath = (path) => path.replace(POSIX_UNESCAPED_GLOB_SYMBOLS, "\\$&");
+const escapeWin32Path = (path) => path.replace(WIN32_UNESCAPED_GLOB_SYMBOLS, "\\$&");
 /**
 * Escapes a path's special characters depending on the platform.
 * @see {@link https://superchupu.dev/tinyglobby/documentation#escapePath}
@@ -144,7 +120,7 @@ const escapePath = isWin ? escapeWin32Path : escapePosixPath;
 */
 function isDynamicPattern(pattern, options) {
 	if ((options === null || options === void 0 ? void 0 : options.caseSensitiveMatch) === false) return true;
-	const scan = picomatch.default.scan(pattern);
+	const scan = picomatch.scan(pattern);
 	return scan.isGlob || scan.negated;
 }
 function log(...tasks) {
@@ -164,7 +140,7 @@ function normalizePattern(pattern, opts, props, isIgnore) {
 	if (pattern[pattern.length - 1] === "/") result = pattern.slice(0, -1);
 	if (result[result.length - 1] !== "*" && opts.expandDirectories) result += "/**";
 	const escapedCwd = escapePath(cwd);
-	result = (0, path.isAbsolute)(result.replace(ESCAPING_BACKSLASHES, "")) ? path.posix.relative(escapedCwd, result) : path.posix.normalize(result);
+	result = isAbsolute(result.replace(ESCAPING_BACKSLASHES, "")) ? posix.relative(escapedCwd, result) : posix.normalize(result);
 	const parentDir = (_PARENT_DIRECTORY$exe = PARENT_DIRECTORY.exec(result)) === null || _PARENT_DIRECTORY$exe === void 0 ? void 0 : _PARENT_DIRECTORY$exe[0];
 	const parts = splitPattern(result);
 	if (parentDir) {
@@ -175,7 +151,7 @@ function normalizePattern(pattern, opts, props, isIgnore) {
 			result = result.slice(0, (n - i - 1) * 3) + result.slice((n - i) * 3 + parts[i + n].length + 1) || ".";
 			i++;
 		}
-		const potentialRoot = path.posix.join(cwd, parentDir.slice(i * 3));
+		const potentialRoot = posix.join(cwd, parentDir.slice(i * 3));
 		if (potentialRoot[0] !== "." && props.root.length > potentialRoot.length) {
 			props.root = ensureNonDriveRelativePath(potentialRoot);
 			props.depthOffset = -n + i;
@@ -197,7 +173,7 @@ function normalizePattern(pattern, opts, props, isIgnore) {
 		}
 		props.depthOffset = newCommonPath.length;
 		props.commonPath = newCommonPath;
-		props.root = ensureNonDriveRelativePath(newCommonPath.length > 0 ? path.posix.join(cwd, ...newCommonPath) : cwd);
+		props.root = ensureNonDriveRelativePath(newCommonPath.length > 0 ? posix.join(cwd, ...newCommonPath) : cwd);
 	}
 	return result;
 }
@@ -238,8 +214,8 @@ function buildCrawler(options, patterns) {
 		noglobstar: options.globstar === false,
 		posix: true
 	};
-	const matcher = (0, picomatch.default)(processed.match, matchOptions);
-	const ignore = (0, picomatch.default)(processed.ignore, matchOptions);
+	const matcher = picomatch(processed.match, matchOptions);
+	const ignore = picomatch(processed.ignore, matchOptions);
 	const partialMatcher = getPartialMatcher(processed.match, matchOptions);
 	const format = buildFormat(cwd, root, absolute);
 	const excludeFormatter = absolute ? format : buildFormat(cwd, root, true);
@@ -249,7 +225,7 @@ function buildCrawler(options, patterns) {
 	};
 	let maxDepth;
 	if (options.deep !== void 0) maxDepth = Math.round(options.deep - props.depthOffset);
-	const crawler = new fdir.fdir({
+	const crawler = new fdir({
 		filters: [debug ? (p, isDirectory) => {
 			const path = format(p, isDirectory);
 			const matches = matcher(path) && !ignore(path);
@@ -298,15 +274,15 @@ const defaultOptions = {
 function getOptions(options) {
 	const opts = Object.assign({}, options);
 	for (const key in defaultOptions) if (opts[key] === void 0) Object.assign(opts, { [key]: defaultOptions[key] });
-	opts.cwd = (opts.cwd instanceof URL ? (0, url.fileURLToPath)(opts.cwd) : (0, path.resolve)(opts.cwd || process.cwd())).replace(BACKSLASHES, "/");
+	opts.cwd = (opts.cwd instanceof URL ? fileURLToPath(opts.cwd) : resolve(opts.cwd || process.cwd())).replace(BACKSLASHES, "/");
 	opts.ignore = ensureStringArray(opts.ignore);
 	opts.fs && (opts.fs = {
-		readdir: opts.fs.readdir || fs.readdir,
-		readdirSync: opts.fs.readdirSync || fs.readdirSync,
-		realpath: opts.fs.realpath || fs.realpath,
-		realpathSync: opts.fs.realpathSync || fs.realpathSync,
-		stat: opts.fs.stat || fs.stat,
-		statSync: opts.fs.statSync || fs.statSync
+		readdir: opts.fs.readdir || readdir,
+		readdirSync: opts.fs.readdirSync || readdirSync,
+		realpath: opts.fs.realpath || realpath,
+		realpathSync: opts.fs.realpathSync || realpathSync,
+		stat: opts.fs.stat || stat,
+		statSync: opts.fs.statSync || statSync
 	});
 	if (opts.debug) log("globbing with options:", opts);
 	return opts;
@@ -328,8 +304,4 @@ function globSync(globInput, options) {
 	return crawler ? formatPaths(crawler.sync(), relative) : [];
 }
 //#endregion
-exports.convertPathToPattern = convertPathToPattern;
-exports.escapePath = escapePath;
-exports.glob = glob;
-exports.globSync = globSync;
-exports.isDynamicPattern = isDynamicPattern;
+export { convertPathToPattern, escapePath, glob, globSync, isDynamicPattern };

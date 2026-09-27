@@ -1,20 +1,25 @@
-# vite ⚡
+# tinyglobby
 
-> Next Generation Frontend Tooling
+[![npm version](https://img.shields.io/npm/v/tinyglobby.svg?maxAge=3600)](https://npmjs.com/package/tinyglobby)
+[![weekly downloads](https://img.shields.io/npm/dw/tinyglobby.svg?maxAge=3600)](https://npmjs.com/package/tinyglobby)
 
-- 💡 Instant Server Start
-- ⚡️ Lightning Fast HMR
-- 🛠️ Rich Features
-- 📦 Optimized Build
-- 🔩 Universal Plugin Interface
-- 🔑 Fully Typed APIs
+A fast and minimal alternative to globby and fast-glob, meant to behave the same way.
 
-Vite (French word for "fast", pronounced `/vit/`) is a new breed of frontend build tool that significantly improves the frontend development experience. It consists of two major parts:
+Both globby and fast-glob present some behavior no other globbing lib has,
+which makes it hard to manually replace with something smaller and better.
 
-- A dev server that serves your source files over [native ES modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules), with [rich built-in features](https://vite.dev/guide/features.html) and astonishingly fast [Hot Module Replacement (HMR)](https://vite.dev/guide/features.html#hot-module-replacement).
+This library uses only two subdependencies, compared to `globby`'s [23](https://npmgraph.js.org/?q=globby@16.2.0)
+and `fast-glob`'s [17](https://npmgraph.js.org/?q=fast-glob@3.3.3).
 
-- A [build command](https://vite.dev/guide/build.html) that bundles your code with [Rollup](https://rollupjs.org), pre-configured to output highly optimized static assets for production.
+## Usage
 
-In addition, Vite is highly extensible via its [Plugin API](https://vite.dev/guide/api-plugin.html) and [JavaScript API](https://vite.dev/guide/api-javascript.html) with full typing support.
+```js
+import { glob, globSync } from 'tinyglobby';
 
-[Read the Docs to Learn More](https://vite.dev).
+await glob(['files/*.ts', '!**/*.d.ts'], { cwd: 'src' });
+globSync('src/**/*.ts', { ignore: '**/*.d.ts' });
+```
+
+## Documentation
+
+Visit https://superchupu.dev/tinyglobby to read the full documentation.
